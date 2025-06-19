@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 # OS specific dependency install
@@ -25,15 +24,5 @@ fi
 
 # Setup ohmyzsh
 sh -c "$(curl -fsSL https://install.ohmyz.sh)"
-
-# Copy the zsh config to the user home folder
-cp zsh/.zshrc $HOME/.zshrc
-
-# Copying the tmux config and activating the changes
-cp tmux/.tmux.conf $HOME/.tmux.conf
-tmux source-file $HOME/.tmux.conf
-
-# Copying the vim config
-cp vim/.vimrc $HOME/.vimrc
 
 set +e
