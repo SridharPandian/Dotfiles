@@ -2,8 +2,8 @@
 set -e
 
 # OS specific dependency install
-OS_TYPE="$(uname)"
-echo "Detected OS: $OS_TYPE"
+OS="$(uname)"
+echo "Detected OS: $OS"
 
 DEPENDENCIES=(curl tmux vim)
 
