@@ -31,6 +31,9 @@ cp zsh/.zshrc $HOME/.zshrc
 
 # Copying the tmux config and activating the changes
 cp tmux/.tmux.conf $HOME/.tmux.conf
-tmux source-file ~/.tmux.conf
+tmux source-file $HOME/.tmux.conf
+
+# Copying the vim config
+cp vim/.vimrc $HOME/.vimrc
 
 set +e
