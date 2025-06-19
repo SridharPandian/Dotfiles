@@ -1,0 +1,14 @@
+# Configuring zsh
+alias zshconfig="vim ~/.zshrc && omz reload"
+
+# Git
+alias gs="git status"
+alias ga="git add"
+alias gc="git commit -m"
+alias gca="git commit -am"
+alias gp="git pull"
+alias gf="git fetch"
+alias grm="git rebase origin/main"
+alias gpf="git push --force-with-lease"
+alias gchm="git checkout main && git pull"
+alias gbn="git checkout -b"
