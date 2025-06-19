@@ -27,8 +27,3 @@ done
 
 echo "All symlinks created successfully."
 
-echo "Loading OhMyZsh changes..."
-source ~/.zshrc
-
-echo "Loading tmux config changes..."
-tmux source-file $HOME/.tmux.conf

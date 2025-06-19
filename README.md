@@ -16,3 +16,13 @@ To setup the symlinks to all the configuration dotfiles:
 cd <project-directory>
 bash symlink-dotfiles.sh
 ```
+
+To source the zshrc changes
+```
+omz reload
+```
+
+To load the tmux changes:
+```
+tmux source-file $HOME/.tmux.conf
+```
