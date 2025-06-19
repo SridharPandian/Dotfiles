@@ -23,3 +23,5 @@ plugins=(aliases git history rsync tmux)
 # Sourcing the main zsh file
 source $ZSH/oh-my-zsh.sh
 
+# Sourcing custom aliases
+[ -f ~/.personal_aliases ] && source ~/.personal_aliases
