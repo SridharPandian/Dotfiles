@@ -1,6 +1,9 @@
 # Configuring zsh
 alias zshconfig="vim ~/.zshrc && omz reload"
 
+# Configuring aliases
+alias aliases="vim ~/.personal_aliases && omz reload"
+
 # Git
 alias gs="git status"
 alias ga="git add"
