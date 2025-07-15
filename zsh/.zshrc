@@ -25,3 +25,6 @@ source $ZSH/oh-my-zsh.sh
 
 # Sourcing custom aliases
 [ -f ~/.personal_aliases ] && source ~/.personal_aliases
+
+# Custom machine specific
+eval "$(mise activate)"

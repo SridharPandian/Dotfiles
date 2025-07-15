@@ -15,3 +15,6 @@ alias grm="git rebase origin/main"
 alias gpf="git push --force-with-lease"
 alias gchm="git checkout main && git pull"
 alias gbn="git checkout -b"
+
+# Docker aliases
+alias builder-x="export BUILDX_BUILDER=cloud-faunarobot-fauna-1"
