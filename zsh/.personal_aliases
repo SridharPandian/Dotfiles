@@ -22,3 +22,6 @@ alias ls="eza --icons"
 alias ll="eza --icons -la"
 alias find="fd"
 alias grep="rg"
+
+# Docker aliases
+alias builder-x="export BUILDX_BUILDER=cloud-faunarobot-fauna-1"
