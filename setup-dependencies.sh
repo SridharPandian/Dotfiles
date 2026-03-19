@@ -47,6 +47,13 @@ else
     exit 1
 fi
 
+# Set zsh as default shell (skip if already set)
+CURRENT_SHELL=$(basename "$SHELL")
+if [ "$CURRENT_SHELL" != "zsh" ]; then
+    echo "Setting zsh as default shell..."
+    chsh -s "$(which zsh)"
+fi
+
 # Setup ohmyzsh (skip if already installed)
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     sh -c "$(curl -fsSL https://install.ohmyz.sh)"
