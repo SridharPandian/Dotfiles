@@ -44,6 +44,9 @@ set hlsearch
 " Add numbers to each line on the left-hand side.
 set number
 
+" Relative line numbers (great for vim motions like 5j, 10k)
+set relativenumber
+
 " Highlight cursor line underneath the cursor horizontally.
 set cursorline
 
@@ -52,6 +55,14 @@ set nowrap
 
 " While searching though a file incrementally highlight matching characters as you type.
 set incsearch
+
+" Ignore case in search unless uppercase is used
+set ignorecase
+set smartcase
+
+" Better tab completion in command mode
+set wildmenu
+set wildmode=longest:list,full
 
 " }}}
 

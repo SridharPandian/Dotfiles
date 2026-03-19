@@ -17,8 +17,11 @@ DISABLE_AUTO_TITLE="true"
 # Hyphen-insensitive completion
 HYPHEN_INSENSITIVE="true"
 
-# Plugins
-plugins=(aliases git history rsync tmux)
+# fzf base directory (for oh-my-zsh fzf plugin)
+export FZF_BASE=/usr/share/doc/fzf/examples
+
+# Plugins (zsh-autosuggestions and zsh-syntax-highlighting require installation via setup-dependencies.sh)
+plugins=(aliases git history rsync tmux zsh-autosuggestions zsh-syntax-highlighting fzf)
 
 # Sourcing the main zsh file
 source $ZSH/oh-my-zsh.sh
