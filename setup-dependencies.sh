@@ -5,18 +5,20 @@ set -e
 OS="$(uname)"
 echo "Detected OS: $OS"
 
-DEPENDENCIES=(curl tmux vim fzf)
+SHARED_DEPENDENCIES=(curl tmux vim fzf bat ripgrep)
 
 if [ "$OS" = "Darwin" ]; then
     # zsh is the default shell in MAC
-    for pkg in "${DEPENDENCIES[@]}"; do
+    OS_DEPENDENCIES=(eza fd git-delta)
+    for pkg in "${SHARED_DEPENDENCIES[@]}" "${OS_DEPENDENCIES[@]}"; do
         brew install "$pkg"
     done
 elif [ "$OS" = "Linux" ]; then
+    OS_DEPENDENCIES=(eza fd-find git-delta)
     sudo apt update -y
     sudo apt install -y zsh zsh-common
 
-    for pkg in "${DEPENDENCIES[@]}"; do
+    for pkg in "${SHARED_DEPENDENCIES[@]}" "${OS_DEPENDENCIES[@]}"; do
         sudo apt install -y "$pkg"
     done
 else
@@ -42,6 +44,20 @@ fi
 if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
     echo "Installing zsh-syntax-highlighting..."
     git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
+fi
+
+# Install Claude Code (skip if already installed)
+if ! command -v claude &> /dev/null; then
+    echo "Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+else
+    echo "Claude Code already installed: $(claude --version)"
+fi
+
+# Create Claude Code config directory (skip if already exists)
+if [ ! -d "$HOME/.claude" ]; then
+    echo "Creating Claude Code config directory..."
+    mkdir -p "$HOME/.claude"
 fi
 
 echo "Setup complete!"
