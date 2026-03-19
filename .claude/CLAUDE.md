@@ -78,7 +78,7 @@ Currently only `claude/.target` exists (pointing to `$HOME/.claude`). All other 
 ### Zsh (`.zshrc`)
 
 - **Framework:** Oh My Zsh
-- **Theme:** `jonathan`
+- **Theme:** `agnoster` (with cyan directory background for dark terminal readability)
 - **Auto-update:** Weekly
 - **Plugins:** `aliases`, `git`, `history`, `rsync`, `tmux`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `fzf`
 - **FZF base:** `/usr/share/doc/fzf/examples` (Linux path)

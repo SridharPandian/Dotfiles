@@ -9,7 +9,9 @@ zstyle ':omz:update' mode auto
 zstyle ':omz:update' frequency 7
 
 # Theme
-ZSH_THEME="jonathan"
+ZSH_THEME="agnoster"
+AGNOSTER_DIR_BG=cyan
+AGNOSTER_DIR_FG=black
 
 # Disable auto-setting terminal title.
 DISABLE_AUTO_TITLE="true"
