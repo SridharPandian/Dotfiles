@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SOURCE_DIR="$(pwd)"
+SOURCE_DIR="$(cd "$(dirname "$0")" && pwd)"
 DEFAULT_TARGET="$HOME"
 
 echo "Linking dotfiles from: $SOURCE_DIR"

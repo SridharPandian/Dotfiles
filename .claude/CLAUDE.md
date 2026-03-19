@@ -6,8 +6,8 @@ Personal dotfiles repository for configuring development environments across mac
 
 ```
 Dotfiles/
-├── setup-dependencies.sh      # Installs all tools, plugins, and Claude Code
-├── symlink-dotfiles.sh        # Symlinks config files from repo to their targets
+├── setup-dependencies.sh      # Installs all tools, plugins, symlinks dotfiles, and optionally Claude Code
+├── symlink-dotfiles.sh        # Symlinks config files from repo to their targets (called by setup-dependencies.sh)
 ├── claude/                    # Claude Code settings → ~/.claude/
 │   ├── .target                # Symlink destination: $HOME/.claude
 │   ├── CLAUDE.md              # Global user preferences/instructions
@@ -31,14 +31,21 @@ When working on this repo, be aware of which branch you're on. Changes that are 
 
 ## Setup Flow
 
-Two-step process, order matters:
+Single command — `setup-dependencies.sh` handles everything end-to-end:
 
-1. **`bash setup-dependencies.sh`** — Installs system packages, Oh My Zsh, zsh plugins, modern CLI tools, and Claude Code. Idempotent — skips already-installed components.
-2. **`bash symlink-dotfiles.sh`** — Iterates each tool subdirectory, reads its `.target` file (or defaults to `$HOME`), and creates symlinks. Must be run from the repo root directory.
+```bash
+bash setup-dependencies.sh            # Install dependencies + symlink dotfiles
+bash setup-dependencies.sh --claude   # Same as above, also installs Claude Code
+```
+
+The script installs all dependencies, sets up Oh My Zsh (with `KEEP_ZSHRC=yes` to preserve existing configs), installs zsh plugins, then automatically runs `symlink-dotfiles.sh` to link dotfiles. `symlink-dotfiles.sh` can also be run independently if only symlinks need updating.
+
+**Important:** Do not run with `sudo` — the script uses `sudo` internally only for commands that need it (apt). Running the whole script as root installs user-level tools (Oh My Zsh, fonts) to `/root/` instead of `$HOME`.
 
 Post-setup reload commands:
-- Zsh: `omz reload`
+- Zsh: restart terminal or `omz reload`
 - Tmux: `tmux source-file $HOME/.tmux.conf`
+- Terminal font: set **JetBrainsMono Nerd Font Mono** in terminal preferences (required for eza icons)
 
 ## Dependencies
 
@@ -46,10 +53,11 @@ Installed via `setup-dependencies.sh`:
 
 | Category | Tools |
 |----------|-------|
-| Core | curl, tmux, vim, fzf, zsh |
+| Core | curl, git, tmux, vim, fzf, zsh |
 | Modern CLI | bat, eza, fd, ripgrep, delta |
+| Fonts | JetBrainsMono Nerd Font |
 | Zsh plugins | zsh-autosuggestions, zsh-syntax-highlighting |
-| AI | Claude Code (via npm) |
+| AI | Claude Code (`--claude` flag required) |
 
 Package names differ between macOS (Homebrew) and Linux (apt) for some tools — handled via `SHARED_DEPENDENCIES` and `OS_DEPENDENCIES` arrays in the setup script.
 
@@ -61,6 +69,7 @@ The `symlink-dotfiles.sh` script uses a `.target` file convention:
 - If no `.target` file exists, files are symlinked to `$HOME` (the default).
 - The `.target` file itself is never symlinked.
 - The `*/` glob naturally excludes hidden directories (`.git/`, `.claude/`).
+- The script resolves its own location via `dirname "$0"`, so it can be invoked from any directory.
 
 Currently only `claude/.target` exists (pointing to `$HOME/.claude`). All other directories use the `$HOME` default.
 
@@ -144,7 +153,7 @@ To add a new tool's config:
 1. Create a subdirectory named after the tool (e.g., `git/`).
 2. Place the config file(s) inside.
 3. If the files should go somewhere other than `$HOME`, create a `.target` file containing the destination path (e.g., `$HOME/.config/tool`).
-4. Run `bash symlink-dotfiles.sh` from the repo root to create the symlinks.
+4. Run `bash symlink-dotfiles.sh` to create the symlinks (can be invoked from any directory).
 5. If the tool needs installation, add it to the appropriate dependency array in `setup-dependencies.sh`.
 
 ## Sensitive Data
