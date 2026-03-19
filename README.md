@@ -5,43 +5,44 @@ The following tools can be setup using this repo:
 - [ohmyzsh](https://ohmyz.sh/)
 - tmux
 - vim
-- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (optional)
 
 ## Dependencies installed
 The setup script installs these tools automatically:
-- **Core:** curl, tmux, vim, fzf, zsh
+- **Core:** curl, git, tmux, vim, fzf, zsh
 - **Modern CLI:** bat, eza, fd, ripgrep, delta
+- **Fonts:** JetBrainsMono Nerd Font (required for eza icons)
 - **Zsh plugins:** zsh-autosuggestions, zsh-syntax-highlighting
+- **AI:** Claude Code (only with `--claude` flag)
 
 ## Setup
 
-To install all the tools and dependencies:
+Single command to install all dependencies and symlink dotfiles:
 ```
 bash setup-dependencies.sh
 ```
 
-To setup the symlinks to all the configuration dotfiles:
+To also install Claude Code:
 ```
-cd <project-directory>
-bash symlink-dotfiles.sh
+bash setup-dependencies.sh --claude
 ```
+
+> **Note:** Do not run with `sudo`. The script uses `sudo` internally only for commands that need it (apt).
 
 ## Adding new tool configurations
 
 1. Create a subdirectory named after the tool (e.g., `git/`).
 2. Place the config file(s) inside.
 3. If the files should go somewhere other than `$HOME`, create a `.target` file containing the destination path (e.g., `$HOME/.claude`).
-4. Run `bash symlink-dotfiles.sh` from the repo root.
+4. Run `bash symlink-dotfiles.sh` to create the symlinks.
 5. If the tool needs installation, add it to the dependency arrays in `setup-dependencies.sh`.
 
 ## Post-setup
 
-To source the zshrc changes:
+Restart your terminal, or reload manually:
 ```
-omz reload
+omz reload                              # Zsh
+tmux source-file $HOME/.tmux.conf       # Tmux
 ```
 
-To load the tmux changes:
-```
-tmux source-file $HOME/.tmux.conf
-```
+Set **JetBrainsMono Nerd Font Mono** as your terminal font for eza icons to render correctly.
