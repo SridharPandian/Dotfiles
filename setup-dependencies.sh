@@ -46,6 +46,14 @@ if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
     git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
 fi
 
+# Install Claude Code (skip if already installed)
+if ! command -v claude &> /dev/null; then
+    echo "Installing Claude Code..."
+    curl -fsSL https://claude.ai/install.sh | bash
+else
+    echo "Claude Code already installed: $(claude --version)"
+fi
+
 # Create Claude Code config directory (skip if already exists)
 if [ ! -d "$HOME/.claude" ]; then
     echo "Creating Claude Code config directory..."
