@@ -14,13 +14,34 @@ if [ "$OS" = "Darwin" ]; then
         brew install "$pkg"
     done
 elif [ "$OS" = "Linux" ]; then
-    OS_DEPENDENCIES=(eza fd-find git-delta)
     sudo apt update -y
     sudo apt install -y zsh zsh-common
 
-    for pkg in "${SHARED_DEPENDENCIES[@]}" "${OS_DEPENDENCIES[@]}"; do
+    for pkg in "${SHARED_DEPENDENCIES[@]}" fd-find; do
         sudo apt install -y "$pkg"
     done
+
+    # eza requires its own apt repository
+    if ! command -v eza &> /dev/null; then
+        echo "Installing eza..."
+        sudo apt install -y gpg
+        sudo mkdir -p /etc/apt/keyrings
+        wget -qO- https://raw.githubusercontent.com/eza-community/eza/main/deb.asc | sudo gpg --dearmor -o /etc/apt/keyrings/gierens.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable main" | sudo tee /etc/apt/sources.list.d/gierens.list
+        sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
+        sudo apt update -y
+        sudo apt install -y eza
+    fi
+
+    # delta requires downloading the .deb package directly
+    if ! command -v delta &> /dev/null; then
+        echo "Installing git-delta..."
+        DELTA_VERSION=$(curl -fsSL https://api.github.com/repos/dandavison/delta/releases/latest | grep -oP '"tag_name": "\K[^"]+')
+        DELTA_DEB="git-delta_${DELTA_VERSION}_$(dpkg --print-architecture).deb"
+        curl -fsSL -o "/tmp/$DELTA_DEB" "https://github.com/dandavison/delta/releases/latest/download/$DELTA_DEB"
+        sudo dpkg -i "/tmp/$DELTA_DEB"
+        rm -f "/tmp/$DELTA_DEB"
+    fi
 else
     echo "Unsupported OS: $OS"
     exit 1
