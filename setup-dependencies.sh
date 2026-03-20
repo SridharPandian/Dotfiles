@@ -66,7 +66,7 @@ elif [ "$OS" = "Linux" ]; then
         rm -f "/tmp/$DELTA_DEB"
     fi
 
-    # Install JetBrainsMono Nerd Font (required for eza icons)
+    # Install JetBrainsMono Nerd Font (required for eza icons and agnoster theme)
     if [ ! -d "$HOME/.local/share/fonts/JetBrainsMono" ]; then
         echo "Installing JetBrainsMono Nerd Font..."
         mkdir -p "$HOME/.local/share/fonts"
@@ -74,6 +74,17 @@ elif [ "$OS" = "Linux" ]; then
         unzip -o /tmp/JetBrainsMono.zip -d "$HOME/.local/share/fonts/JetBrainsMono"
         fc-cache -fv
         rm -f /tmp/JetBrainsMono.zip
+    fi
+
+    # Set GNOME Terminal font to JetBrainsMono Nerd Font Mono
+    if command -v dconf &> /dev/null; then
+        GNOME_TERMINAL_PROFILE=$(gsettings get org.gnome.Terminal.ProfilesList default 2>/dev/null | tr -d "'")
+        if [ -n "$GNOME_TERMINAL_PROFILE" ]; then
+            PROFILE_PATH="/org/gnome/terminal/legacy/profiles:/:${GNOME_TERMINAL_PROFILE}/"
+            dconf write "${PROFILE_PATH}use-system-font" "false"
+            dconf write "${PROFILE_PATH}font" "'JetBrainsMono Nerd Font Mono 12'"
+            echo "GNOME Terminal font set to JetBrainsMono Nerd Font Mono"
+        fi
     fi
 else
     echo "Unsupported OS: $OS"
@@ -127,9 +138,22 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 bash "$SCRIPT_DIR/symlink-dotfiles.sh"
 
+# Symlink VS Code settings (path differs by OS)
+if [ "$OS" = "Darwin" ]; then
+    VSCODE_USER_DIR="$HOME/Library/Application Support/Code/User"
+else
+    VSCODE_USER_DIR="$HOME/.config/Code/User"
+fi
+if [ -d "$VSCODE_USER_DIR" ]; then
+    ln -sf "$SCRIPT_DIR/vscode/settings.json" "$VSCODE_USER_DIR/settings.json"
+    echo "Linked VS Code settings → $VSCODE_USER_DIR/settings.json"
+fi
+
 echo ""
 echo "Setup complete! To load all changes:"
 echo "  - Zsh: restart your terminal or run 'omz reload'"
 echo "  - Tmux: run 'tmux source-file ~/.tmux.conf'"
-echo "  - Terminal font: set 'JetBrainsMono Nerd Font Mono' in your terminal preferences"
+if [ "$OS" = "Darwin" ]; then
+    echo "  - iTerm2 font: Preferences → Profiles → Text → Font → 'JetBrainsMono Nerd Font Mono'"
+fi
 set +e
