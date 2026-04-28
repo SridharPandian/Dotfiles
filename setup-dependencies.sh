@@ -95,7 +95,25 @@ fi
 CURRENT_SHELL=$(basename "$SHELL")
 if [ "$CURRENT_SHELL" != "zsh" ]; then
     echo "Setting zsh as default shell..."
-    chsh -s "$(which zsh)"
+    if grep -q "^$(whoami):" /etc/passwd 2>/dev/null; then
+        chsh -s "$(which zsh)"
+        echo "Default shell set to zsh."
+    else
+        echo "Managed user account detected (LDAP/AD). Adding exec zsh fallback to ~/.bashrc..."
+        BASHRC="$HOME/.bashrc"
+        if ! grep -q "exec zsh" "$BASHRC" 2>/dev/null; then
+            ZSH_PREPEND=$(mktemp)
+            BASHRC_NEW=$(mktemp)
+            cat > "$ZSH_PREPEND" <<'EOF'
+# Auto-switch to zsh (chsh unavailable on managed systems)
+if [ -t 1 ] && command -v zsh &>/dev/null; then
+  exec zsh
+fi
+EOF
+            cat "$ZSH_PREPEND" "$BASHRC" > "$BASHRC_NEW" && mv "$BASHRC_NEW" "$BASHRC"
+            rm -f "$ZSH_PREPEND"
+        fi
+    fi
 fi
 
 # Setup ohmyzsh (skip if already installed)
