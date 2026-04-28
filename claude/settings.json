@@ -4,6 +4,8 @@
       "Read",
       "Edit(**/.claude/**)",
       "Write(**/.claude/**)"
-    ]
-  }
+    ],
+    "defaultMode": "auto"
+  },
+  "skipAutoPermissionPrompt": true
 }
