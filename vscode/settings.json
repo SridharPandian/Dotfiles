@@ -1,4 +1,5 @@
 {
     "terminal.integrated.fontFamily": "JetBrainsMono Nerd Font Mono",
-    "terminal.integrated.keyboard.protocol": "classic"
+    "terminal.integrated.keyboard.protocol": "classic",
+    "workbench.colorTheme": "Overnight Slumber Italics"
 }

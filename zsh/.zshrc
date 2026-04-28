@@ -41,3 +41,7 @@ export AWS_DEFAULT_REGION=us-east-1
 export AWS_SSH_KEY_NAME="sridhar-key"
 export AWS_SSH_KEY_PATH=~/.ssh/sridhar-key.pem
 export AWS_SECURITY_GROUP="sg-06f32cd57f5eebf23"
+
+# BEGIN Ansible - mise
+eval "$(mise activate)"
+# END Ansible - mise
