@@ -45,3 +45,14 @@ export AWS_SECURITY_GROUP="sg-06f32cd57f5eebf23"
 # BEGIN Ansible - mise
 eval "$(mise activate)"
 # END Ansible - mise
+
+export PATH="$HOME/.toolbox/bin:$PATH"
+
+# BEGIN ANSIBLE MANAGED: Claude Code Bedrock
+export CLAUDE_CODE_USE_BEDROCK=1
+export AWS_REGION=us-east-1
+export AWS_PROFILE=prod
+export ANTHROPIC_DEFAULT_SONNET_MODEL=us.anthropic.claude-sonnet-4-6
+export ANTHROPIC_DEFAULT_OPUS_MODEL=us.anthropic.claude-opus-4-7
+export ANTHROPIC_DEFAULT_HAIKU_MODEL=us.anthropic.claude-haiku-4-5-20251001-v1:0
+# END ANSIBLE MANAGED: Claude Code Bedrock
