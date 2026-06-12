@@ -28,6 +28,47 @@ if [ "$OS" = "Darwin" ]; then
         echo "Installing JetBrainsMono Nerd Font..."
         brew install --cask font-jetbrains-mono-nerd-font
     fi
+
+    # Configure iTerm2: font (JetBrainsMono Nerd Font Mono, PostScript name
+    # JetBrainsMonoNFM-Regular) plus the key fixes for option/cmd + backspace.
+    ITERM_PLIST="$HOME/Library/Preferences/com.googlecode.iterm2.plist"
+    if [ -f "$ITERM_PLIST" ]; then
+        python3 - "$ITERM_PLIST" <<'PYEOF'
+import plistlib, sys
+
+plist_path = sys.argv[1]
+font = "JetBrainsMonoNFM-Regular 15"
+
+with open(plist_path, "rb") as fh:
+    prefs = plistlib.load(fh)
+
+# Apply font and key fixes to every iTerm2 profile.
+for profile in prefs.get("New Bookmarks", []):
+    profile["Normal Font"] = font
+    profile["Non Ascii Font"] = font
+
+    # Make Option a Meta key (Esc+) so option+backspace emits ESC 0x7f,
+    # which the line editor reads as delete-word-backward.
+    profile["Option Key Sends"] = 2
+    profile["Right Option Key Sends"] = 2
+
+    # Map cmd+backspace -> hex 0x15 (Ctrl+U = kill-to-line-start). The ⌘ key
+    # never reaches the terminal on its own, so it needs an explicit mapping.
+    #   key string : keycode 0x7f (Backspace) + modifier 0x100000 (Command)
+    #   Action 11  : "Send Hex Code"
+    keyboard_map = profile.setdefault("Keyboard Map", {})
+    keyboard_map["0x7f-0x100000"] = {"Action": 11, "Text": "0x15"}
+
+with open(plist_path, "wb") as fh:
+    plistlib.dump(prefs, fh)
+PYEOF
+        echo "iTerm2 configured: font + option/cmd backspace key fixes"
+        # iTerm2 rewrites this plist from memory on quit, so a live edit is lost on the next quit.
+        # (macOS pgrep can miss the main iTerm2 process, so match the executable path via ps.)
+        if ps -axo comm= | grep -qx "/Applications/iTerm.app/Contents/MacOS/iTerm2"; then
+            echo "  - iTerm2 is running: fully quit it (Cmd+Q) and reopen for these changes to take effect"
+        fi
+    fi
 elif [ "$OS" = "Linux" ]; then
     sudo apt update -y
     sudo apt install -y zsh zsh-common
@@ -172,6 +213,6 @@ echo "Setup complete! To load all changes:"
 echo "  - Zsh: restart your terminal or run 'omz reload'"
 echo "  - Tmux: run 'tmux source-file ~/.tmux.conf'"
 if [ "$OS" = "Darwin" ]; then
-    echo "  - iTerm2 font: Preferences → Profiles → Text → Font → 'JetBrainsMono Nerd Font Mono'"
+    echo "  - iTerm2: font + key fixes applied — relaunch iTerm2 (Cmd+Q) to apply"
 fi
 set +e
