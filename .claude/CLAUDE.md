@@ -81,7 +81,7 @@ Currently only `claude/.target` exists (pointing to `$HOME/.claude`). All other 
 - **Theme:** `agnoster` (with cyan directory background for dark terminal readability)
 - **Auto-update:** Weekly
 - **Plugins:** `aliases`, `git`, `history`, `rsync`, `tmux`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `fzf`
-- **FZF base:** `/usr/share/doc/fzf/examples` (Linux path)
+- **FZF base:** OS-detected — `$HOMEBREW_PREFIX/opt/fzf` on macOS, `/usr/share/doc/fzf/examples` on Linux
 - Sources `~/.personal_aliases` if it exists
 
 **fauna-dotfiles additions:** mise activation, `RMW_IMPLEMENTATION` export, AWS environment variables (profile, region, SSH key, security group).
@@ -89,7 +89,7 @@ Currently only `claude/.target` exists (pointing to `$HOME/.claude`). All other 
 ### Tmux (`.tmux.conf`)
 
 - **Prefix:** `Ctrl-A` (remapped from default `Ctrl-B`)
-- **Default shell:** `/usr/bin/zsh`
+- **Default shell:** OS-detected — `/bin/zsh` on macOS, `/usr/bin/zsh` on Linux
 - **Pane splits:** `Ctrl-A W` (horizontal), `Ctrl-A E` (vertical)
 - **Pane switching:** `Alt + Arrow keys` (no prefix needed)
 - **Config reload:** `Ctrl-A R`
