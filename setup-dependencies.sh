@@ -18,7 +18,7 @@ SHARED_DEPENDENCIES=(curl git tmux vim fzf bat ripgrep)
 
 if [ "$OS" = "Darwin" ]; then
     # zsh is the default shell in MAC
-    OS_DEPENDENCIES=(eza fd git-delta)
+    OS_DEPENDENCIES=(eza fd git-delta glow atuin)
     for pkg in "${SHARED_DEPENDENCIES[@]}" "${OS_DEPENDENCIES[@]}"; do
         brew install "$pkg"
     done
@@ -105,6 +105,26 @@ elif [ "$OS" = "Linux" ]; then
         curl -fsSL -o "/tmp/$DELTA_DEB" "https://github.com/dandavison/delta/releases/latest/download/$DELTA_DEB"
         sudo dpkg -i "/tmp/$DELTA_DEB"
         rm -f "/tmp/$DELTA_DEB"
+    fi
+
+    # glow requires Charm's apt repository
+    if ! command -v glow &> /dev/null; then
+        echo "Installing glow..."
+        sudo apt install -y gpg
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor --yes -o /etc/apt/keyrings/charm.gpg
+        echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+        sudo apt update -y
+        sudo apt install -y glow
+    fi
+
+    # atuin: release binary straight into ~/.local/bin. The setup.atuin.sh wrapper is
+    # avoided on purpose: it appends to ~/.zshrc and ~/.bashrc and installs Claude Code
+    # hooks into ~/.claude/settings.json (both symlinked from this repo).
+    if ! command -v atuin &> /dev/null && [ ! -x "$HOME/.local/bin/atuin" ]; then
+        echo "Installing atuin..."
+        curl --proto '=https' --tlsv1.2 -LsSf https://github.com/atuinsh/atuin/releases/latest/download/atuin-installer.sh \
+            | ATUIN_INSTALL_DIR="$HOME/.local/bin" ATUIN_NO_MODIFY_PATH=1 sh
     fi
 
     # Install JetBrainsMono Nerd Font (required for eza icons and agnoster theme)
@@ -212,6 +232,14 @@ fi
 # Symlink dotfiles from repo to their target locations
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 bash "$SCRIPT_DIR/symlink-dotfiles.sh"
+
+# Import existing zsh history into atuin once; skipped once atuin has a history database.
+# Runs after the symlinks so atuin already sees the repo's config.
+ATUIN_BIN="$(command -v atuin || echo "$HOME/.local/bin/atuin")"
+if [ -x "$ATUIN_BIN" ] && [ ! -f "${XDG_DATA_HOME:-$HOME/.local/share}/atuin/history.db" ]; then
+    echo "Importing zsh history into atuin..."
+    "$ATUIN_BIN" import zsh || echo "atuin import failed: run 'atuin import zsh' manually"
+fi
 
 # Symlink VS Code settings (path differs by OS)
 if [ "$OS" = "Darwin" ]; then

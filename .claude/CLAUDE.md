@@ -8,6 +8,9 @@ Personal dotfiles repository for configuring development environments across mac
 Dotfiles/
 ├── setup-dependencies.sh      # Installs all tools, plugins, symlinks dotfiles, and optionally Claude Code
 ├── symlink-dotfiles.sh        # Symlinks config files from repo to their targets (called by setup-dependencies.sh)
+├── atuin/                     # Atuin shell history config → ~/.config/atuin/
+│   ├── .target                # Symlink destination: $HOME/.config/atuin
+│   └── config.toml            # Local-only history, Enter edits instead of runs
 ├── claude/                    # Claude Code settings → ~/.claude/
 │   ├── .target                # Symlink destination: $HOME/.claude
 │   ├── CLAUDE.md              # Global user preferences/instructions
@@ -61,7 +64,8 @@ Installed via `setup-dependencies.sh`:
 | Category | Tools |
 |----------|-------|
 | Core | curl, git, tmux, vim, fzf, zsh |
-| Modern CLI | bat, eza, fd, ripgrep, delta |
+| Modern CLI | bat, eza, fd, ripgrep, delta, glow |
+| Shell history | atuin |
 | Fonts | JetBrainsMono Nerd Font |
 | Zsh plugins | zsh-autosuggestions, zsh-syntax-highlighting |
 | Multiplexer | herdr (via `herdr.dev/install.sh`) |
@@ -79,7 +83,7 @@ The `symlink-dotfiles.sh` script uses a `.target` file convention:
 - The `*/` glob naturally excludes hidden directories (`.git/`, `.claude/`).
 - The script resolves its own location via `dirname "$0"`, so it can be invoked from any directory.
 
-Three `.target` files exist: `claude/.target` (pointing to `$HOME/.claude`), `claude-hooks/.target` (pointing to `$HOME/.claude/hooks`), and `herdr/.target` (pointing to `$HOME/.config/herdr`). All other directories use the `$HOME` default.
+Four `.target` files exist: `atuin/.target` (pointing to `$HOME/.config/atuin`), `claude/.target` (pointing to `$HOME/.claude`), `claude-hooks/.target` (pointing to `$HOME/.claude/hooks`), and `herdr/.target` (pointing to `$HOME/.config/herdr`). All other directories use the `$HOME` default.
 
 The script only links top-level files (`find -maxdepth 1`), so a nested destination like `~/.claude/hooks/` needs its own top-level directory with a `.target` (hence `claude-hooks/` rather than `claude/hooks/`).
 
@@ -94,6 +98,7 @@ Because the script links files individually rather than the directory itself, `h
 - **Auto-update:** Weekly
 - **Plugins:** `aliases`, `git`, `history`, `rsync`, `tmux`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `fzf`
 - **FZF base:** OS-detected — `$HOMEBREW_PREFIX/opt/fzf` on macOS, `/usr/share/doc/fzf/examples` on Linux
+- **History search:** atuin on `Ctrl-R` (initialized after oh-my-zsh so it overrides the fzf plugin's `Ctrl-R`; fzf keeps `Ctrl-T` and `Alt-C`). Falls back to fzf's `Ctrl-R` when atuin isn't installed
 - Sources `~/.personal_aliases` if it exists
 
 **fauna-dotfiles additions:** mise activation, `RMW_IMPLEMENTATION` export, AWS environment variables (profile, region, SSH key, security group).
@@ -163,6 +168,23 @@ claude starts / resumes in a herdr pane
 - Only sessions that start or resume *after* the hook is in place are known to herdr. A Claude session that predates it comes back as a plain shell; resume it by hand with `claude --resume`.
 - **Do not let `setup-dependencies.sh` (or anyone) run `herdr integration install claude` blindly.** herdr only recognizes its own absolute-path hook entry, so it appends a second, machine-specific `bash '/Users/…/herdr-agent-state.sh' session` entry to `claude/settings.json` (through the symlink).
 - **Upgrading the integration** (when `herdr integration status` reports claude as outdated after a herdr update): run `herdr integration install claude`, which rewrites `claude-hooks/herdr-agent-state.sh` through the symlink. Then delete the duplicate absolute-path entry it appended to `claude/settings.json`, and commit the updated script. The committed script is currently v10 (herdr 0.9.3).
+
+### Atuin (`config.toml`)
+
+Shell history in a local SQLite database, with each command's directory, exit code, duration, and host. Full-screen search on `Ctrl-R`.
+
+- **Local only:** `auto_sync = false` and `update_check = false`, so nothing contacts `api.atuin.sh`. No account is set up. Secrets matching known token patterns (AWS, GitHub, Slack, Stripe) are filtered from history by default.
+- **Enter edits, doesn't run:** `enter_accept = false`, so Enter (like Tab) places the selected command on the prompt, matching fzf's `Ctrl-R`. Running a fuzzy match immediately is risky on a robot.
+- **Key bindings live in `.zshrc`**, not the config: `atuin init zsh --disable-up-arrow --disable-ai` binds only `Ctrl-R`. The up arrow stays plain history stepping, and `?` on an empty prompt does not open Atuin AI (a hosted service).
+- **Install:** Homebrew on macOS. On Linux, the release binary from `atuin-installer.sh` with `ATUIN_INSTALL_DIR="$HOME/.local/bin"` (flat layout: the binary lands directly in that directory) and `ATUIN_NO_MODIFY_PATH=1`. The `setup.atuin.sh` wrapper is avoided because it appends to `~/.zshrc` and `~/.bashrc` and installs Claude Code hooks into the symlinked `~/.claude/settings.json`.
+- **History import:** `setup-dependencies.sh` runs `atuin import zsh` once per machine, skipped once `~/.local/share/atuin/history.db` exists.
+- Unlike herdr, atuin refuses to start on an invalid config ("could not load client settings") rather than silently using defaults.
+- The Linux installer writes `atuin-receipt.json` next to the config; the symlink script links files individually, so it coexists with the linked `config.toml`.
+- **Not enabled:** `atuin hook install claude-code` (records commands Claude runs into atuin history). It would edit the symlinked `settings.json`; decide on portability first, as with the herdr hook.
+
+### Glow
+
+Terminal markdown renderer (`glow README.md`, or `glow` alone to browse markdown files in the current directory). No config. Installed via Homebrew on macOS and Charm's apt repository on Linux.
 
 ### Vim (`.vimrc`)
 
