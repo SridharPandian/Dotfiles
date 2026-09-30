@@ -1,0 +1,58 @@
+# herdr configuration → ~/.config/herdr/config.toml
+#
+# Only values that differ from herdr's defaults are set here; run
+# `herdr --default-config` to see the full annotated default set.
+#
+# NOTE: herdr has no send-prefix action. With prefix = ctrl+a, a nested tmux
+# session (also ctrl+a) is unreachable — herdr swallows the key. Use herdr as
+# the outer multiplexer only.
+
+# Skip the first-run onboarding flow (herdr writes this once it completes).
+onboarding = false
+
+[keys]
+# tmux: set-option -g prefix C-a
+#
+# The prefix is the only remapped key. Every action is left on herdr's default
+# binding — press prefix+? for the live list. Note that several tmux habits do
+# something different here: prefix+w is the workspace picker (not a split),
+# prefix+e edits scrollback, prefix+r enters resize mode (not reload), and
+# prefix+shift+t renames the tab rather than the pane.
+prefix = "ctrl+a"
+
+[terminal]
+# Left unset on purpose: empty falls back to $SHELL, so there is no need for the
+# /bin/zsh vs /usr/bin/zsh branch that tmux/.tmux.conf requires.
+# default_shell = ""
+
+[ui]
+# tmux: set -g status-position bottom
+tab_bar_position = "bottom"
+
+# tmux: set -g status-right '%Y-%m-%d %H:%M '
+# herdr parses strftime, so the tmux format string carries over verbatim.
+tab_bar_right = [{ type = "datetime", format = "%Y-%m-%d %H:%M" }]
+
+# tmux draws internal splitters only and shares divider borders between panes.
+pane_outer_borders = false
+pane_gaps = false
+
+# Closest analogue to tmux's pane-border-format pane titles.
+show_agent_labels_on_pane_borders = true
+
+# Mouse mode (tmux: set -g mouse on) is already herdr's default.
+
+# Distinct glyphs per agent state (blocked, working, done, idle, unknown)
+# instead of the default color-only dots.
+status_indicators = "symbols"
+
+[ui.toast]
+# Off by default in herdr, which hides the feature that makes it worth running:
+# being told when a background agent finishes or blocks on an approval prompt.
+# "system" posts to the OS notification service, so alerts show even when herdr
+# isn't focused. Only one mode applies: "herdr" (in-app), "terminal", or "off".
+delivery = "system"
+
+[theme]
+name = "dracula"
+auto_switch = false

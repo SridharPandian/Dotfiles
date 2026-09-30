@@ -13,6 +13,9 @@ Dotfiles/
 │   ├── CLAUDE.md              # Global user preferences/instructions
 │   ├── settings.json          # Permissions config
 │   └── policy-limits.json     # Restriction settings
+├── herdr/                     # Herdr multiplexer config → ~/.config/herdr/
+│   ├── .target                # Symlink destination: $HOME/.config/herdr
+│   └── config.toml            # Keybindings + UI, ported from .tmux.conf
 ├── vim/
 │   └── .vimrc                 # Vim configuration → ~/
 ├── tmux/
@@ -45,6 +48,7 @@ The script installs all dependencies, sets up Oh My Zsh (with `KEEP_ZSHRC=yes` t
 Post-setup reload commands:
 - Zsh: restart terminal or `omz reload`
 - Tmux: `tmux source-file $HOME/.tmux.conf`
+- Herdr: `herdr server reload-config` (only if a herdr server is already running)
 - Terminal font: set **JetBrainsMono Nerd Font Mono** in terminal preferences (required for eza icons)
 
 ## Dependencies
@@ -57,6 +61,7 @@ Installed via `setup-dependencies.sh`:
 | Modern CLI | bat, eza, fd, ripgrep, delta |
 | Fonts | JetBrainsMono Nerd Font |
 | Zsh plugins | zsh-autosuggestions, zsh-syntax-highlighting |
+| Multiplexer | herdr (via `herdr.dev/install.sh`) |
 | AI | Claude Code (`--claude` flag required) |
 
 Package names differ between macOS (Homebrew) and Linux (apt) for some tools — handled via `SHARED_DEPENDENCIES` and `OS_DEPENDENCIES` arrays in the setup script.
@@ -71,7 +76,9 @@ The `symlink-dotfiles.sh` script uses a `.target` file convention:
 - The `*/` glob naturally excludes hidden directories (`.git/`, `.claude/`).
 - The script resolves its own location via `dirname "$0"`, so it can be invoked from any directory.
 
-Currently only `claude/.target` exists (pointing to `$HOME/.claude`). All other directories use the `$HOME` default.
+Two `.target` files exist: `claude/.target` (pointing to `$HOME/.claude`) and `herdr/.target` (pointing to `$HOME/.config/herdr`). All other directories use the `$HOME` default.
+
+Because the script links files individually rather than the directory itself, `herdr/config.toml` can share `~/.config/herdr/` with herdr's runtime state (`herdr.sock`, `session.json`, `*.log`) without disturbing it.
 
 ## Configuration Details
 
@@ -95,6 +102,37 @@ Currently only `claude/.target` exists (pointing to `$HOME/.claude`). All other 
 - **Config reload:** `Ctrl-A R`
 - **Mouse mode:** Enabled
 - **Status bar:** Bottom, shows `YYYY-MM-DD HH:MM`
+
+### Herdr (`config.toml`)
+
+Terminal workspace manager for AI coding agents. Hierarchy is `session → workspace → tab → pane`, where workspace is an extra layer above tmux's model (git branch/worktree aware, with per-pane agent detection).
+
+The prefix is the only remapped key; every action stays on its herdr default.
+
+- **Prefix:** `Ctrl-A` (remapped from `Ctrl-B` to match tmux)
+- **Pane splits:** `prefix V` (side by side), `prefix -` (stacked)
+- **Pane switching:** `prefix H/J/K/L`, or `prefix G` for navigate mode
+- **Pane title:** `prefix Shift-P`
+- **Config reload:** `prefix Shift-R`
+- **Detach:** `prefix Q`
+- **Workspace picker:** `prefix W`
+- **Rename tab:** `prefix Shift-T`
+- **Status bar:** bottom, shows `YYYY-MM-DD HH:MM`
+- **Theme:** `dracula`, with automatic light/dark switching off
+- **Agent status indicators:** `symbols` (distinct glyph per state instead of color-only dots)
+
+Unchanged from tmux, so muscle memory already works: `prefix C` new tab, `prefix N`/`P` next/prev tab, `prefix 1..9` switch tab, `prefix X` close pane, `prefix Z` zoom.
+
+Notes:
+
+- Because only the prefix is remapped, several tmux habits do something *different* rather than nothing: `prefix W` opens the workspace picker instead of splitting, `prefix E` edits scrollback, `prefix R` enters resize mode instead of reloading, and `prefix Shift-T` renames the **tab**, not the pane. `Alt + Arrow` is unbound.
+- herdr names splits by divider orientation (like vim `:vsplit`), which is **inverted** from tmux's `-h`/`-v` flags. `split_vertical` = side by side; `split_horizontal` = stacked.
+- herdr has **no send-prefix action**. With prefix `Ctrl-A`, a nested tmux session on the same prefix is unreachable. Use herdr as the outer multiplexer only.
+- `default_shell` is deliberately left unset — it falls back to `$SHELL`, avoiding the `/bin/zsh` vs `/usr/bin/zsh` branch that `.tmux.conf` needs.
+- Background notifications (`[ui.toast] delivery`) are off in herdr's defaults; this config sets `"system"` (OS notification service), so alerts show even when herdr isn't focused. `delivery` takes exactly one of `off`, `herdr`, `terminal`, `system` — in-app and system toasts can't be combined.
+- A config parse error makes herdr silently fall back to all defaults, so always run `herdr config check` after editing.
+- Installed by `setup-dependencies.sh` via the official `herdr.dev/install.sh` script to `~/.local/bin/herdr`. On reruns the script calls `herdr update` instead, which is a no-op when current. The update is skipped inside a herdr pane (detected via `HERDR_ENV`, where `herdr update` exits 1), and herdr itself declines to replace the binary while a server is running — detach/stop sessions, then run `herdr update`.
+- Validate changes with `herdr config check`, then apply to a running server with `herdr server reload-config`.
 
 ### Vim (`.vimrc`)
 
