@@ -7,5 +7,19 @@
     ],
     "defaultMode": "auto"
   },
-  "skipAutoPermissionPrompt": true
+  "skipAutoPermissionPrompt": true,
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "^(startup|resume|clear|compact|fork)$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$HOME/.claude/hooks/herdr-agent-state.sh\"; [ ! -f \"$f\" ] || bash \"$f\" session",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
 }
