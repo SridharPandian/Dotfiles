@@ -177,6 +177,22 @@ if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
     git clone https://github.com/zsh-users/zsh-syntax-highlighting "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting"
 fi
 
+# Install herdr, or update it to the latest release. The installer puts the binary
+# in ~/.local/bin, which may not be on PATH until .zshrc loads, so check it directly.
+HERDR_BIN="$(command -v herdr || echo "$HOME/.local/bin/herdr")"
+if [ ! -x "$HERDR_BIN" ]; then
+    echo "Installing herdr..."
+    curl -fsSL https://herdr.dev/install.sh | sh
+elif [ -n "$HERDR_ENV" ]; then
+    # `herdr update` exits 1 when run from inside a herdr pane
+    echo "Skipping herdr update ($("$HERDR_BIN" --version)): detach from herdr and run 'herdr update'"
+else
+    # No-op when already current; if a herdr server is running, it declines to
+    # replace the binary and says so (exit 0). A failed upgrade shouldn't abort setup.
+    echo "Updating herdr..."
+    "$HERDR_BIN" update || echo "herdr update failed: run 'herdr update' manually"
+fi
+
 # Install Claude Code (only with --claude flag)
 if [ "$INSTALL_CLAUDE" = true ]; then
     if ! command -v claude &> /dev/null; then
@@ -212,6 +228,7 @@ echo ""
 echo "Setup complete! To load all changes:"
 echo "  - Zsh: restart your terminal or run 'omz reload'"
 echo "  - Tmux: run 'tmux source-file ~/.tmux.conf'"
+echo "  - Herdr: run 'herdr server reload-config' if a herdr server is already running"
 if [ "$OS" = "Darwin" ]; then
     echo "  - iTerm2: font + key fixes applied — relaunch iTerm2 (Cmd+Q) to apply"
 fi
