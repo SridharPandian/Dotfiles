@@ -13,12 +13,27 @@ onboarding = false
 [keys]
 # tmux: set-option -g prefix C-a
 #
-# The prefix is the only remapped key. Every action is left on herdr's default
-# binding — press prefix+? for the live list. Note that several tmux habits do
-# something different here: prefix+w is the workspace picker (not a split),
-# prefix+e edits scrollback, prefix+r enters resize mode (not reload), and
-# prefix+shift+t renames the tab rather than the pane.
+# No existing default is remapped besides the prefix; the bindings below only
+# fill actions herdr leaves unbound. Press prefix+? for the live list. Note that
+# several tmux habits do something different here: prefix+w is the workspace
+# picker (not a split), prefix+e edits scrollback, prefix+r enters resize mode
+# (not reload), and prefix+shift+t renames the tab rather than the pane.
 prefix = "ctrl+a"
+
+# Jump between agents in sidebar order (see agent_panel_sort below), or straight
+# to the Nth one. Alt works in iTerm2 because Option is set to send Esc+.
+next_agent = "prefix+alt+j"
+previous_agent = "prefix+alt+k"
+focus_agent = "prefix+alt+1..9"
+
+# Floating scratch shell over the current layout; exit the shell to close it.
+[[keys.command]]
+key = "prefix+alt+s"
+type = "popup"
+command = "exec \"${SHELL:-sh}\""
+description = "open scratch shell"
+width = "80%"
+height = "80%"
 
 [terminal]
 # Left unset on purpose: empty falls back to $SHELL, so there is no need for the
@@ -45,6 +60,10 @@ show_agent_labels_on_pane_borders = true
 # Distinct glyphs per agent state (blocked, working, done, idle, unknown)
 # instead of the default color-only dots.
 status_indicators = "symbols"
+
+# Sort the agent sidebar as an attention queue (blocked first) instead of by
+# workspace, so next_agent/previous_agent visit agents that need input first.
+agent_panel_sort = "priority"
 
 [ui.toast]
 # Off by default in herdr, which hides the feature that makes it worth running:

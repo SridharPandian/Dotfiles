@@ -1,0 +1,17 @@
+# atuin configuration → ~/.config/atuin/config.toml
+#
+# Only values that differ from atuin's defaults are set here; run
+# `atuin default-config` to see the full annotated default set.
+#
+# Key bindings are set in zsh/.zshrc, not here: `atuin init zsh
+# --disable-up-arrow --disable-ai` binds Ctrl-R only (replacing fzf's Ctrl-R),
+# leaves the up arrow as plain history stepping, and leaves `?` unbound.
+
+# Local only: history never leaves the machine. No account is set up, and
+# nothing contacts api.atuin.sh (sync or update checks).
+auto_sync = false
+update_check = false
+
+# Enter puts the selected command on the prompt instead of running it, same as
+# fzf's Ctrl-R. Running a fuzzy match immediately is risky on a robot.
+enter_accept = false

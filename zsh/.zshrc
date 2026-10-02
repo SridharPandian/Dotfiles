@@ -38,5 +38,10 @@ plugins=(aliases git history rsync tmux zsh-autosuggestions zsh-syntax-highlight
 # Sourcing the main zsh file
 source $ZSH/oh-my-zsh.sh
 
+# atuin: searchable shell history on Ctrl-R. Must come after oh-my-zsh so it
+# overrides the fzf plugin's Ctrl-R (fzf keeps Ctrl-T and Alt-C). The up arrow
+# stays plain history stepping, and `?` stays unbound (no Atuin AI).
+(( $+commands[atuin] )) && eval "$(atuin init zsh --disable-up-arrow --disable-ai)"
+
 # Sourcing custom aliases
 [ -f ~/.personal_aliases ] && source ~/.personal_aliases

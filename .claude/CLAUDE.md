@@ -8,11 +8,17 @@ Personal dotfiles repository for configuring development environments across mac
 Dotfiles/
 ├── setup-dependencies.sh      # Installs all tools, plugins, symlinks dotfiles, and optionally Claude Code
 ├── symlink-dotfiles.sh        # Symlinks config files from repo to their targets (called by setup-dependencies.sh)
+├── atuin/                     # Atuin shell history config → ~/.config/atuin/
+│   ├── .target                # Symlink destination: $HOME/.config/atuin
+│   └── config.toml            # Local-only history, Enter edits instead of runs
 ├── claude/                    # Claude Code settings → ~/.claude/
 │   ├── .target                # Symlink destination: $HOME/.claude
 │   ├── CLAUDE.md              # Global user preferences/instructions
-│   ├── settings.json          # Permissions config
+│   ├── settings.json          # Permissions + hooks config
 │   └── policy-limits.json     # Restriction settings
+├── claude-hooks/              # Claude Code hook scripts → ~/.claude/hooks/
+│   ├── .target                # Symlink destination: $HOME/.claude/hooks
+│   └── herdr-agent-state.sh   # herdr's Claude integration hook (session restore)
 ├── herdr/                     # Herdr multiplexer config → ~/.config/herdr/
 │   ├── .target                # Symlink destination: $HOME/.config/herdr
 │   └── config.toml            # Keybindings + UI, ported from .tmux.conf
@@ -58,7 +64,8 @@ Installed via `setup-dependencies.sh`:
 | Category | Tools |
 |----------|-------|
 | Core | curl, git, tmux, vim, fzf, zsh |
-| Modern CLI | bat, eza, fd, ripgrep, delta |
+| Modern CLI | bat, eza, fd, ripgrep, delta, glow |
+| Shell history | atuin |
 | Fonts | JetBrainsMono Nerd Font |
 | Zsh plugins | zsh-autosuggestions, zsh-syntax-highlighting |
 | Multiplexer | herdr (via `herdr.dev/install.sh`) |
@@ -76,7 +83,9 @@ The `symlink-dotfiles.sh` script uses a `.target` file convention:
 - The `*/` glob naturally excludes hidden directories (`.git/`, `.claude/`).
 - The script resolves its own location via `dirname "$0"`, so it can be invoked from any directory.
 
-Two `.target` files exist: `claude/.target` (pointing to `$HOME/.claude`) and `herdr/.target` (pointing to `$HOME/.config/herdr`). All other directories use the `$HOME` default.
+Four `.target` files exist: `atuin/.target` (pointing to `$HOME/.config/atuin`), `claude/.target` (pointing to `$HOME/.claude`), `claude-hooks/.target` (pointing to `$HOME/.claude/hooks`), and `herdr/.target` (pointing to `$HOME/.config/herdr`). All other directories use the `$HOME` default.
+
+The script only links top-level files (`find -maxdepth 1`), so a nested destination like `~/.claude/hooks/` needs its own top-level directory with a `.target` (hence `claude-hooks/` rather than `claude/hooks/`).
 
 Because the script links files individually rather than the directory itself, `herdr/config.toml` can share `~/.config/herdr/` with herdr's runtime state (`herdr.sock`, `session.json`, `*.log`) without disturbing it.
 
@@ -89,6 +98,7 @@ Because the script links files individually rather than the directory itself, `h
 - **Auto-update:** Weekly
 - **Plugins:** `aliases`, `git`, `history`, `rsync`, `tmux`, `zsh-autosuggestions`, `zsh-syntax-highlighting`, `fzf`
 - **FZF base:** OS-detected — `$HOMEBREW_PREFIX/opt/fzf` on macOS, `/usr/share/doc/fzf/examples` on Linux
+- **History search:** atuin on `Ctrl-R` (initialized after oh-my-zsh so it overrides the fzf plugin's `Ctrl-R`; fzf keeps `Ctrl-T` and `Alt-C`). Falls back to fzf's `Ctrl-R` when atuin isn't installed
 - Sources `~/.personal_aliases` if it exists
 
 **fauna-dotfiles additions:** mise activation, `RMW_IMPLEMENTATION` export, AWS environment variables (profile, region, SSH key, security group).
@@ -107,11 +117,16 @@ Because the script links files individually rather than the directory itself, `h
 
 Terminal workspace manager for AI coding agents. Hierarchy is `session → workspace → tab → pane`, where workspace is an extra layer above tmux's model (git branch/worktree aware, with per-pane agent detection).
 
-The prefix is the only remapped key; every action stays on its herdr default.
+The prefix is the only remapped default. The extra bindings (agent navigation, scratch shell) only fill actions herdr leaves unbound.
 
 - **Prefix:** `Ctrl-A` (remapped from `Ctrl-B` to match tmux)
 - **Pane splits:** `prefix V` (side by side), `prefix -` (stacked)
 - **Pane switching:** `prefix H/J/K/L`, or `prefix G` for navigate mode
+- **Pane swap:** `prefix Shift-H/J/K/L`
+- **Copy mode:** `prefix [` (vi keys: `v` select, `y` yank, `/` and `?` search)
+- **Agent navigation:** `prefix Alt-J`/`Alt-K` next/previous agent, `prefix Alt-1..9` jump to the Nth agent, `prefix O` jump to the agent behind the current notification. The sidebar is sorted by `priority` (blocked agents first), so next/previous visits agents needing input first
+- **Scratch shell:** `prefix Alt-S` opens a floating `$SHELL` popup (80% × 80%) over the layout; exit the shell to close it
+- **Worktrees:** `prefix Shift-G` creates a git worktree plus a workspace for it under `~/.herdr/worktrees/<repo>/<branch>`, so parallel agents can work on separate branches
 - **Pane title:** `prefix Shift-P`
 - **Config reload:** `prefix Shift-R`
 - **Detach:** `prefix Q`
@@ -125,7 +140,7 @@ Unchanged from tmux, so muscle memory already works: `prefix C` new tab, `prefix
 
 Notes:
 
-- Because only the prefix is remapped, several tmux habits do something *different* rather than nothing: `prefix W` opens the workspace picker instead of splitting, `prefix E` edits scrollback, `prefix R` enters resize mode instead of reloading, and `prefix Shift-T` renames the **tab**, not the pane. `Alt + Arrow` is unbound.
+- Because no default besides the prefix is remapped, several tmux habits do something *different* rather than nothing: `prefix W` opens the workspace picker instead of splitting, `prefix E` edits scrollback, `prefix R` enters resize mode instead of reloading, and `prefix Shift-T` renames the **tab**, not the pane. `Alt + Arrow` is unbound.
 - herdr names splits by divider orientation (like vim `:vsplit`), which is **inverted** from tmux's `-h`/`-v` flags. `split_vertical` = side by side; `split_horizontal` = stacked.
 - herdr has **no send-prefix action**. With prefix `Ctrl-A`, a nested tmux session on the same prefix is unreachable. Use herdr as the outer multiplexer only.
 - `default_shell` is deliberately left unset — it falls back to `$SHELL`, avoiding the `/bin/zsh` vs `/usr/bin/zsh` branch that `.tmux.conf` needs.
@@ -133,6 +148,43 @@ Notes:
 - A config parse error makes herdr silently fall back to all defaults, so always run `herdr config check` after editing.
 - Installed by `setup-dependencies.sh` via the official `herdr.dev/install.sh` script to `~/.local/bin/herdr`. On reruns the script calls `herdr update` instead, which is a no-op when current. The update is skipped inside a herdr pane (detected via `HERDR_ENV`, where `herdr update` exits 1), and herdr itself declines to replace the binary while a server is running — detach/stop sessions, then run `herdr update`.
 - Validate changes with `herdr config check`, then apply to a running server with `herdr server reload-config`.
+- `Alt` bindings rely on iTerm2's Option key sending Esc+ (set by `setup-dependencies.sh`). Skip herdr 0.9.2: it broke Option+Left/Right and Option+Backspace in iTerm2, fixed in 0.9.3.
+
+#### Claude Code integration (session restore)
+
+With `session.resume_agents_on_restore` (on by default), herdr reopens agent panes into their native conversations after a server restart. For Claude, herdr learns each pane's session ID from a `SessionStart` hook:
+
+```
+claude starts / resumes in a herdr pane
+   │
+   └─▶ SessionStart hook (claude/settings.json)
+          │
+          └─▶ ~/.claude/hooks/herdr-agent-state.sh ──symlink──▶ claude-hooks/herdr-agent-state.sh
+                 │
+                 └─▶ pane.report_agent_session over $HERDR_SOCKET_PATH
+```
+
+- The hook command is portable (`$HOME`, not an absolute path) and guarded, so it's a silent no-op when the script is missing. The script itself exits immediately outside herdr (`HERDR_ENV` unset) and needs `python3`.
+- Only sessions that start or resume *after* the hook is in place are known to herdr. A Claude session that predates it comes back as a plain shell; resume it by hand with `claude --resume`.
+- **Do not let `setup-dependencies.sh` (or anyone) run `herdr integration install claude` blindly.** herdr only recognizes its own absolute-path hook entry, so it appends a second, machine-specific `bash '/Users/…/herdr-agent-state.sh' session` entry to `claude/settings.json` (through the symlink).
+- **Upgrading the integration** (when `herdr integration status` reports claude as outdated after a herdr update): run `herdr integration install claude`, which rewrites `claude-hooks/herdr-agent-state.sh` through the symlink. Then delete the duplicate absolute-path entry it appended to `claude/settings.json`, and commit the updated script. The committed script is currently v10 (herdr 0.9.3).
+
+### Atuin (`config.toml`)
+
+Shell history in a local SQLite database, with each command's directory, exit code, duration, and host. Full-screen search on `Ctrl-R`.
+
+- **Local only:** `auto_sync = false` and `update_check = false`, so nothing contacts `api.atuin.sh`. No account is set up. Secrets matching known token patterns (AWS, GitHub, Slack, Stripe) are filtered from history by default.
+- **Enter edits, doesn't run:** `enter_accept = false`, so Enter (like Tab) places the selected command on the prompt, matching fzf's `Ctrl-R`. Running a fuzzy match immediately is risky on a robot.
+- **Key bindings live in `.zshrc`**, not the config: `atuin init zsh --disable-up-arrow --disable-ai` binds only `Ctrl-R`. The up arrow stays plain history stepping, and `?` on an empty prompt does not open Atuin AI (a hosted service).
+- **Install:** Homebrew on macOS. On Linux, the release binary from `atuin-installer.sh` with `ATUIN_INSTALL_DIR="$HOME/.local/bin"` (flat layout: the binary lands directly in that directory) and `ATUIN_NO_MODIFY_PATH=1`. The `setup.atuin.sh` wrapper is avoided because it appends to `~/.zshrc` and `~/.bashrc` and installs Claude Code hooks into the symlinked `~/.claude/settings.json`.
+- **History import:** `setup-dependencies.sh` runs `atuin import zsh` once per machine, skipped once `~/.local/share/atuin/history.db` exists.
+- Unlike herdr, atuin refuses to start on an invalid config ("could not load client settings") rather than silently using defaults.
+- The Linux installer writes `atuin-receipt.json` next to the config; the symlink script links files individually, so it coexists with the linked `config.toml`.
+- **Not enabled:** `atuin hook install claude-code` (records commands Claude runs into atuin history). It would edit the symlinked `settings.json`; decide on portability first, as with the herdr hook.
+
+### Glow
+
+Terminal markdown renderer (`glow README.md`, or `glow` alone to browse markdown files in the current directory). No config. Installed via Homebrew on macOS and Charm's apt repository on Linux.
 
 ### Vim (`.vimrc`)
 
@@ -148,8 +200,10 @@ Organized in folded sections (`{{{`/`}}}`):
 Portable settings symlinked to `~/.claude/`:
 
 - **CLAUDE.md** — Global preferences governing Claude Code behavior across all projects
-- **settings.json** — Permission rules (silent read/write access to `.claude/` directories)
+- **settings.json** — Permission rules (silent read/write access to `.claude/` directories) and the herdr `SessionStart` hook
 - **policy-limits.json** — Restriction settings (remote control disabled)
+
+Hook scripts live in `claude-hooks/` and are symlinked to `~/.claude/hooks/` (see the Herdr section for the herdr integration).
 
 Excluded from repo (machine-local): `.credentials.json`, `todo.md`, `sessions/`, `cache/`, `plugins/`.
 
